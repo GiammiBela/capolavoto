@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-image: url('sfondo.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            padding: 80px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+            min-height: 80vh;
+            width: 80vw;
+        }
+
+        .currency-title {
+            color: red;
+            text-align: center;
+            font-size: 60px;
+            font-weight: bold;
+            animation: colorChange 5s infinite alternate;
+            margin-bottom: 40px;
+        }
+
+        .currency-form {
+            margin-top: 40px;
+        }
+
+        .currency-result {
+            margin-top: 40px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .convert-btn {
+            margin-top: 20px;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            margin-left: 20px;
+        }
+
+        .form-label {
+            font-size: 28px;
+        }
+
+        .chart-title {
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 80%;
+            margin: auto;
+        }
+
+        canvas {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="currency-title">Cambio di Valute</h1>
+        <div class="currency-form">
+            <div class="form-group">
+                <label for="amount" class="form-label">Quantità di denaro a disposizione:</label>
+                <input type="number" id="amount" class="form-control" value="1">
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="from" class="form-label">Da:</label>
+                        <select id="from" class="form-select">
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="CHF">CHF</option>
+                            <option value="CNY">CNY</option>
+                            <option value="SEK">SEK</option>
+                            <option value="NZD">NZD</option>
+                            <!-- Aggiungi altre valute se necessario -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="to" class="form-label">A:</label>
+                        <select id="to" class="form-select">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="CHF">CHF</option>
+                            <option value="CNY">CNY</option>
+                            <option value="SEK">SEK</option>
+                            <option value="NZD">NZD</option>
+                            <!-- Aggiungi altre valute se necessario -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <button onclick="convertCurrency()" class="btn btn-primary convert-btn">Converti</button>
+                <button onclick="resetForm()" class="btn btn-secondary reset-btn">Reset</button>
+            </div>
+        </div>
+        <div class="currency-result" id="currencyResult"></div>
+        <div class="currency-chart">
+            <h2 class="chart-title">Grafico del Cambio</h2>
+            <div class="chart-container">
+                <canvas id="currencyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currencyChart;
+        const initialLabels = ['01 May', '03 May', '05 May', '07 May', '09 May', '11 May', '13 May', '15 May', '17 May', '19 May', '21 May', '23 May'];
+        const initialData = [1.07, 1.068, 1.069, 1.071, 1.072, 1.074, 1.075, 1.078, 1.079, 1.081, 1.084, 1.086];
+
+        function createLineChart(labels, data) {
+            const ctx = document.getElementById('currencyChart').getContext('2d');
+            if (currencyChart) {
+                currencyChart.destroy();
+            }
+            currencyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cambio di valuta',
+                        data: data,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4 // Smooth curves
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        async function convertCurrency() {
+            const amount = document.getElementById('amount').value;
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+
+            if (from === to) {
+                document.getElementById('currencyResult').innerHTML = `<p>${amount} ${from} = ${amount} ${to}</p>`;
+                return;
+            }
+
+            const response = await fetch(`/api/currency/convert?from=${from}&to=${to}&amount=${amount}`);
+            const data = await response.json();
+
+            // Mostra il risultato del cambio
+            document.getElementById('currencyResult').innerHTML = `<p>${amount} ${from} = ${data.amount} ${to}</p>`;
+        }
+
+        function resetForm() {
+            document.getElementById('amount').value = 1;
+            document.getElementById('from').value = 'EUR';
+            document.getElementById('to').value = 'USD';
+            document.getElementById('currencyResult').innerHTML = '';
+
+            // Ripristina il grafico ai valori iniziali
+            createLineChart(initialLabels, initialData);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inizializza il grafico con i valori iniziali
+            createLineChart(initialLabels, initialData);
+        });
+    </script>
+</body>
+</html>
